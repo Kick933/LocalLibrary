@@ -1,5 +1,6 @@
 const BookInstance = require('../models/bookinstance')
-const book = require('../models/book')
+const Book = require('../models/book')
+const async = require('async')
 const { body,  validationResult } = require('express-validator')
 
 
@@ -28,10 +29,17 @@ exports.bookinstance_detail = function(req,res) {
 }
 // Display BookInstance create form on GET.
 exports.bookinstance_create_get = function(req,res) {
-    Book.find({},'title')
-    .exec(function(err,books){
+    async.parallel({
+        books: function(callback){
+            Book.find({},'title').exec(callback)
+        },
+        status: function(callback){
+            const val = BookInstance.schema.path('status').enumValues.sort((a,b) => a.toUpperCase() > b.toUpperCase() ? 1 : -1)
+            callback(null,val)
+        }
+    }, function(err,result){
         if(err) return next(err)
-        res.render('bookinstance_form',{ title : 'Create Book Instance', book_list : books})
+        res.render('bookinstance_form', {title: 'Create Book Instance', book_list : result.books, status:result.status})
     })
 }
 // Handle Bookinstance create on POST.
@@ -55,15 +63,24 @@ exports.bookinstance_create_post = [
 
         if(!errors.isEmpty()){
             // If errors, render the form again.
-            Book.find({}, 'title')
-            .exec(function(err,books){
-                res.render('bookinstance_form', { title : 'Create Book Instance', book_list: books, selected_book: bookinstance.book._id, errors: errors.array()})
+            async.parallel({
+                books: function(callback){
+                    Book.find({},'title').exec(callback)
+                },
+                status: function(callback){
+                    const val = BookInstance.schema.path('status').enumValues.sort((a,b) => a.toUpperCase() > b.toUpperCase() ? 1 : -1)
+                    callback(null,val)
+                }
+            }, function(err,result){
+                if(err) return next(err)
+                const selected = bookinstance.status
+                console.log(selected)
+                res.render('bookinstance_form', {title: 'Create Book Instance', book_list : result.books, status:result.status, errors:errors.array(), selected: selected})
             })
             return
         }else {
                 bookinstance.save(function(err){
                     if(err) return next(err)
-
                     res.redirect(bookinstance.url)
                 })
         }

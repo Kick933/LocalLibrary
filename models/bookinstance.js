@@ -23,6 +23,7 @@ BookInstanceSchema
 BookInstanceSchema
 .virtual('due_back_formatted')
 .get(function () {
+  if(this.due_back===null) return 'Unavailable'
   return DateTime.fromJSDate(this.due_back).toLocaleString(DateTime.DATE_MED)
 })
 
