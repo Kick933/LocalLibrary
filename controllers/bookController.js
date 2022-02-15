@@ -3,7 +3,9 @@ const Author = require('../models/author');
 const Genre = require('../models/genre');
 const BookInstance = require('../models/bookinstance');
 const async = require('async');
-const { body, validationResult } = require('express-validator')
+const { body, validationResult } = require('express-validator');
+const book = require('../models/book');
+const req = require('express/lib/request');
 
 exports.index = function(req,res) {
     async.parallel({
@@ -58,6 +60,8 @@ exports.book_detail = function(req,res) {
             err.status = 404
             return next(err)
         }
+        // Sort book instance by status
+        result.book_instance.sort((a,b) => a.status.toUpperCase() > b.status.toUpperCase() ? 1 : -1)
         res.render('book_detail', { title : result.book.title, book : result.book, book_instances : result.book_instance})
     })
 }
@@ -82,13 +86,13 @@ exports.book_create_post = [
             if(typeof req.body.genre === 'undefined') req.body.genre = []
             else req.body.genre = new Array(req.body.genre)
         }
+        next()
     },
     body('title', 'Title must not be empty.').trim().isLength({ min : 1 }).escape(),
     body('author','Author must not be empty.').trim().isLength({ min : 1 }).escape(),
     body('summary', 'Summary must not be empty.').trim().isLength({ min : 1 }).escape(),
     body('isbn', 'ISBN must not be empty.').trim().isLength({ min : 1 }).escape(),
     body('genre.*').escape(),
-
     (req,res,next) => {
         // Extract validation errors from request
         const errors = validationResult(req)
@@ -101,7 +105,6 @@ exports.book_create_post = [
             isbn: req.body.isbn,
             genre: req.body.genre
         })
-
         if(!errors.isEmpty()){
 
             async.parallel({
@@ -125,6 +128,7 @@ exports.book_create_post = [
         }else {
             book.save(function(err){
                 if(err) return next(err)
+                // Redirect to book url on success
                 res.redirect(book.url)
             })
         }
@@ -132,11 +136,60 @@ exports.book_create_post = [
 ]
 // Display book delete form on GET.
 exports.book_delete_get = function(req,res) {
-    res.send("NOT IMPLEMENTED : Book delete GET")
+    async.parallel({
+        book_instance : function(callback) {
+            BookInstance.find({'book': req.params.id})
+            .exec(callback)
+        },
+        book : function(callback) {
+            Book.findById(req.params.id).exec(callback)
+        }
+    }, function(err, result) {
+        if(err) return next(err)
+        // If book is not found in record, redirect to book list
+        if(book === null){
+            res.redirect('/catalog/books')
+            return
+        }
+        // If no book instance found, render book deletion page.
+        if(result.book_instance.length === null){
+            res.render('book_delete', { title : 'Delete Book ', book : result.book})
+        }else{
+            // Sort the book instance array
+            result.book_instance.sort((a,b) => a.status.toUpperCase() > b.status.toUpperCase() ? 1 : -1)
+            // Else show list of book instance to be deleted.
+            res.render('book_delete', { title : 'Delete Book ', book : result.book, book_instance : result.book_instance})
+        }
+    })
 }
 // Handle book delete on POST.
 exports.book_delete_post = function(req,res) {
-    res.send("NOT IMPLEMENTED : Book delete POST")
+    async.parallel({
+        book: function(callback) {
+            Book.findById(req.body.id)
+            .populate('author')
+            .populate('genre')
+            .exec(callback)
+        },
+        book_instance : function(callback) {
+            BookInstance.find({'book' : req.body.id})
+            .exec(callback)
+        }
+    },function(err,result) {
+        if(err) return next(err)
+        // If book has copies, render delete page.
+        if(result.book_instance.length > 0){
+            // Sort the book instance array.
+            result.book_instance.sort((a,b) => a.status.toUpperCase() > b.status.toUpperCase() ? 1 : -1)
+            res.render('book_detail', { title : result.book.title, book : result.book, book_instances : result.book_instance})
+            return
+        }
+        Book.findByIdAndRemove(req.body.bookid, function (err){
+            if(err) return next(err)
+            // Redirect to book list on success or if book not found in database
+            res.redirect('/catalog/books')
+        })
+    })
 }
 // Display book update form on GET.
 exports.book_update_get = function(req,res) {

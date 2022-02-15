@@ -1,0 +1,36 @@
+extends layout 
+
+
+block content 
+    h1 #{title} #{book.title}
+    hr
+    h3 Summary: 
+    p(style='padding:20px') #{book.summary}
+
+    if book_instance.length!==0
+        p #[strong Delete following copies before attempting to delete this book.]
+
+        div(style='margin-left:20px;margin-top:20px')
+
+            dl 
+            each val in book_instance 
+                hr
+                dt
+                    a(href=val.url) #{val.imprint}
+                dd 
+                    if val.status=='Available'
+                        p.text-success #{val.status}
+                    else if val.status=='Maintanence'
+                        p.text-danger #{val.status}
+                    else
+                        p.text-warning #{val.status}
+
+    else 
+        p Do your really want to delete this Book?
+        
+        form(method="POST" action='')
+            div.form-group
+                input#authorid.form-control(type='hidden' name='bookid' required='true' value=book._id)
+
+            button.btn.btn-danger(type='submit') Delete 
+    
