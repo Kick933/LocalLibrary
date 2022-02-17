@@ -57,7 +57,7 @@ exports.genre_create_post = [
             if(!errors.isEmpty()){
                 res.render('genre_form', { title : 'Create Genre', genre : genre, errors: errors.array() })
                 return
-            }else{
+            }else{  
                 // Check if Genre already exists
                 Genre.findOne({ name :  req.params.name})
                 .exec(function(err,found_genre){
@@ -126,9 +126,40 @@ exports.genre_delete_post = function(req,res) {
 }
 // Display Genre update form on GET.
 exports.genre_update_get = function(req,res) {
-    res.send("NOT IMPLEMENTED : Genre update GET")
+    Genre.findById(req.params.id).exec(function(err, genre){
+        if(err) next(err)
+        if(genre===null){
+            const err = new Error("Genre not found.")
+            err.status = 404
+            return next(err)
+        }
+        res.render('genre_form', { title : 'Update Genre', genre : genre })
+    })
 }
 // Handle Genre update on POST.
-exports.genre_update_post = function(req,res) {
-    res.send("NOT IMPLEMENTED : Genre update POST")
-}
+exports.genre_update_post = [
+    // Validation and santization.
+    body('name').trim().isLength({ min : 1 }).withMessage("Name must not be empty.").escape(),
+
+    (req,res,next) => {
+        // extract validation error.
+        const errors = validationResult(req)
+
+        // create new genre with same id
+        const genre = new Genre({
+            name: req.body.name,
+            _id: req.params.id
+        })
+        // On error, render genre_form with error.
+        if(!errors.isEmpty()){
+            res.render('genre_form', { title : 'Update genre', genre : genre, errors : errors.array()})
+            return
+        }else{
+            Genre.findByIdAndUpdate(req.params.id, genre,function(err,thegenre){
+                if (err) return next(err)
+                // redirect to genres page on success or if genre not found.
+                res.redirect(thegenre.url)
+            })
+        }
+    }
+]
