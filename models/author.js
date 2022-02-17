@@ -2,6 +2,7 @@ var mongoose = require('mongoose');
 
 var Schema = mongoose.Schema;
 
+const {DateTime} = require('luxon')
 var AuthorSchema = new Schema(
   {
     first_name: {type: String, required: true, maxLength: 100},
@@ -51,6 +52,18 @@ AuthorSchema
   return '/catalog/author/' + this._id;
 });
 
-
+// Formatted date of birth in yyyy-mm-dd
+AuthorSchema
+.virtual('dob')
+.get(function(){
+  return DateTime.fromJSDate(this.date_of_birth).toLocaleString(DateTime.DATE_SHORT).split('/').reverse().join('-')
+})
+// Formatted date of death in yyyy-mm-dd
+AuthorSchema
+.virtual('dod')
+.get(function(){
+  if(this.date_of_death===null || this.date_of_death===undefined) return ""
+  return DateTime.fromJSDate(this.date_of_death).toLocaleString(DateTime.DATE_SHORT).split('/').reverse().join('-')
+})
 //Export model
 module.exports = mongoose.model('Author', AuthorSchema);
