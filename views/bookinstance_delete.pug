@@ -1,0 +1,15 @@
+extends layout 
+
+
+block content 
+
+    h1 Delete Copy of #{bookinstance.book.title}
+    p #[strong Imprint : #{bookinstance.imprint}]
+
+    p Do you really want to delete this copy of #{bookinstance.book.title}?
+
+    form(method='POST' action='')
+        div.form-group
+            input#bookinstanceid.form-control(type='hidden' required='true' value=bookinstance._id name='bookinstanceid')
+
+        button.btn.btn-danger(type='submit') Delete

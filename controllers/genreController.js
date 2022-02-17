@@ -118,7 +118,7 @@ exports.genre_delete_post = function(req,res) {
             res.render('genre_delete', { genre : result.genre, genre_books : result.genre_books})
             return
         }
-        Genre.findByIdAndRemove(req.body.genreid, function(err){
+        Genre.findByIdAndRemove(req.body.genreid, function(err,result){
             if(err) return next(err)
             res.redirect('/catalog/genres')
         })
