@@ -9,10 +9,12 @@ block content
     p #[strong Summary:] #{book.summary}
     p #[strong ISBN:] #{book.isbn}
     p #[strong Genre:] 
-        each val in book.genre 
-            a(href=val.url) #{val.name}
+        each val, index in book.genre 
             if index < book.genre.length - 1
-                |,
+                a(href=val.url) #{val.name}
+                |, 
+            else 
+                a(href=val.url) #{val.name}
     div(style='margin-left:20px;margin-top:20px')
         h4 Copies
 
@@ -36,3 +38,6 @@ block content
     hr
     p
         a(href=book.url + '/delete') Delete Book
+    hr
+    p 
+        a(href=book.url + '/update') Update Book
