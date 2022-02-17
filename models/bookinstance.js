@@ -26,6 +26,12 @@ BookInstanceSchema
   if(this.due_back===null || this.due_back===undefined) return 'Unavailable'
   return DateTime.fromJSDate(this.due_back).toLocaleString(DateTime.DATE_MED)
 })
+// formatted return date for html form
+BookInstanceSchema.virtual('due_back_html')
+.get(function(){
+  if(this.due_back===null || this.due_back===undefined) return ''
+  return DateTime.fromJSDate(this.due_back).toLocaleString(DateTime.DATE_SHORT).split('/').reverse().join('-')
+})
 
 //Export model
 module.exports = mongoose.model('BookInstance', BookInstanceSchema);

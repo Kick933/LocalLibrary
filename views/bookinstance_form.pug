@@ -9,9 +9,9 @@ block content
             label(for='book') Book: 
             select#book.form-control(type='select' placeholder='Select Book' name='book' required='true')
              - book_list.sort(function(a,b) {let textA = a.title.toUpperCase(); let textB = b.title.toUpperCase(); return (textA < textB) ? -1 : (textA > textB) ? 1 :  0;})
-                for book in book_list 
+                each book in book_list 
                     if bookinstance 
-                        option(value=book._id selected=(bookinstance.book.toString()==book._id.toString() ? 'selected' : false))  book.title
+                        option(value=book._id selected=(bookinstance.book.toString()==book._id.toString() ? 'selected' : false))  #{book.title}
                     else 
                         option(value=book._id) #{book.title}
         div.form-group
@@ -19,12 +19,12 @@ block content
             input#imprint.form-control(type='text' placeholder='Publisher and date information' name='imprint' required='true' value=(undefined===bookinstance ? '' : bookinstance.imprint))
         div.form-group
             label(for='due_back') Date when available: 
-            input#due_back.form-control(type='date' name='due_back' value=(undefined===bookinstance ? '' : bookinstance.due_back))
+            input#due_back.form-control(type='date' name='due_back' value=(undefined===bookinstance ? '' : bookinstance.due_back_html))
         div.form-group
             label(for='status') Status: 
             select#status.form-control(type='select' placeholder='Select Status' name='status' required='true')
-                for val in status
-                    if selected==val
+                each val in status
+                    if bookinstance.status==val
                         option(value=val selected) #{val}
                     else 
                         option(value=val) #{val}
