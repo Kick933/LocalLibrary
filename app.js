@@ -3,6 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan'); 
+const compression = require('compression')
 const mongoose = require('mongoose')
 // for environment variables
 const dotenv = require('dotenv')
@@ -14,6 +15,8 @@ const catalogRouter = require('./routes/catalog')
 
 
 var app = express();
+// use compression
+app.use(compression())
 
 // connect to Database.
 mongoose.connect(process.env.DATABASE_URI, {useNewUrlParser: true, useUnifiedTopology: true})
